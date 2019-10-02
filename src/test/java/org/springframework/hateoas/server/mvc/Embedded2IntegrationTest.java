@@ -36,7 +36,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.LinkRelation;
-import org.springframework.hateoas.ModelBuilder;
+import org.springframework.hateoas.ModelBuilder2;
 import org.springframework.hateoas.RepresentationModel;
 import org.springframework.hateoas.config.EnableHypermediaSupport;
 import org.springframework.hateoas.config.EnableHypermediaSupport.HypermediaType;
@@ -64,7 +64,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 @ExtendWith(SpringExtension.class)
 @WebAppConfiguration
 @ContextConfiguration
-public class EmbeddedIntegrationTest {
+public class Embedded2IntegrationTest {
 
 	private @Autowired WebApplicationContext context;
 	private MockMvc mockMvc;
@@ -120,8 +120,8 @@ public class EmbeddedIntegrationTest {
 		@GetMapping("/other-author")
 		RepresentationModel<?> singleItem() {
 
-			return ModelBuilder //
-					.entity(new Author("Alan Watts", "January 6, 1915", "November 16, 1973")) //
+			return ModelBuilder2 //
+					.subResource(new Author("Alan Watts", "January 6, 1915", "November 16, 1973")) //
 					.link(new Link("/people/alan-watts")) //
 					.build();
 		}
@@ -129,43 +129,44 @@ public class EmbeddedIntegrationTest {
 		@GetMapping("/authors")
 		RepresentationModel<?> collection() {
 
-			return ModelBuilder //
-					.collection() //
-
-					.entity(new Author("Greg L. Turnquist", null, null)) //
-					.link(linkTo(methodOn(EmbeddedController.class).authorDetails(1)).withSelfRel())
-					.link(linkTo(methodOn(EmbeddedController.class).collection()).withRel("authors")) //
-
-					.entity(new Author("Craig Walls", null, null)) //
-					.link(linkTo(methodOn(EmbeddedController.class).authorDetails(2)).withSelfRel())
-					.link(linkTo(methodOn(EmbeddedController.class).collection()).withRel("authors")) //
-
-					.entity(new Author("Oliver Drotbhom", null, null)) //
-					.link(linkTo(methodOn(EmbeddedController.class).authorDetails(2)).withSelfRel())
-					.link(linkTo(methodOn(EmbeddedController.class).collection()).withRel("authors")) //
-
-					.rootLink(linkTo(methodOn(EmbeddedController.class).collection()).withSelfRel()) //
-
+			return ModelBuilder2 //
+					.subResource( //
+							ModelBuilder2 //
+									.resource(new Author("Greg L. Turnquist", null, null)) //
+									.link(linkTo(methodOn(EmbeddedController.class).authorDetails(1)).withSelfRel()) //
+									.link(linkTo(methodOn(EmbeddedController.class).collection()).withRel("authors")) //
+									.build())
+					.subResource( //
+							ModelBuilder2 //
+									.resource(new Author("Craig Walls", null, null)) //
+									.link(linkTo(methodOn(EmbeddedController.class).authorDetails(2)).withSelfRel()) //
+									.link(linkTo(methodOn(EmbeddedController.class).collection()).withRel("authors")) //
+									.build())
+					.subResource( //
+							ModelBuilder2 //
+									.resource(new Author("Oliver Drotbhom", null, null)) //
+									.link(linkTo(methodOn(EmbeddedController.class).authorDetails(2)).withSelfRel()) //
+									.link(linkTo(methodOn(EmbeddedController.class).collection()).withRel("authors")) //
+									.build())
+					.link(linkTo(methodOn(EmbeddedController.class).collection()).withSelfRel()) //
 					.build();
 		}
 
 		@GetMapping("/author/{id}")
 		RepresentationModel<?> authorDetails(@PathVariable int id) {
 
-			return ModelBuilder //
-					.embed(LinkRelation.of("author")) //
-
-					.entity(new Author("Alan Watts", "January 6, 1915", "November 16, 1973")) //
-					.link(new Link("/people/alan-watts")) //
-
-					.embed(LinkRelation.of("illustrator")) //
-					.entity(new Author("John Smith", null, null)) //
-					.link(new Link("/people/john-smith")) //
-
-					.rootLink(new Link("/books/the-way-of-zen")) //
-					.rootLink(new Link("/people/alan-watts", LinkRelation.of("author"))) //
-					.rootLink(new Link("/people/john-smith", LinkRelation.of("illustrator"))) //
-
+			return ModelBuilder2 //
+					.subResource(LinkRelation.of("author"), ModelBuilder2 //
+							.resource(new Author("Alan Watts", "January 6, 1915", "November 16, 1973")) //
+							.link(new Link("/people/alan-watts")) //
+							.build())
+					.subResource(LinkRelation.of("illustrator"), ModelBuilder2 //
+							.resource(new Author("John Smith", null, null)) //
+							.link(new Link("/people/john-smith")) //
+							.build())
+					.link(new Link("/books/the-way-of-zen")) //
+					.link(new Link("/people/alan-watts", LinkRelation.of("author"))) //
+					.link(new Link("/people/john-smith", LinkRelation.of("illustrator"))) //
 					.build();
 		}
 	}

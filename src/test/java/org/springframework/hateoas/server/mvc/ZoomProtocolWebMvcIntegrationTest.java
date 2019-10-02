@@ -30,9 +30,9 @@ import lombok.Getter;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -46,7 +46,7 @@ import org.springframework.hateoas.RepresentationModel;
 import org.springframework.hateoas.config.EnableHypermediaSupport;
 import org.springframework.hateoas.config.EnableHypermediaSupport.HypermediaType;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -64,7 +64,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
  * @author Greg Turnquist
  * @author Oliver Gierke
  */
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @WebAppConfiguration
 @ContextConfiguration
 public class ZoomProtocolWebMvcIntegrationTest {
@@ -75,7 +75,7 @@ public class ZoomProtocolWebMvcIntegrationTest {
 
 	private static Map<Integer, Product> PRODUCTS;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		this.mockMvc = webAppContextSetup(this.context).build();
