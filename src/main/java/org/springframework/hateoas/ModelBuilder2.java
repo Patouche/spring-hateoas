@@ -31,37 +31,16 @@ import org.springframework.hateoas.server.core.EmbeddedWrappers;
  */
 public class ModelBuilder2 {
 
-	private RepresentationModel<?> subResources;
-
-	public static <T> EntityModelBuilder<T> resource(T domainObject) {
-		return new EntityModelBuilder<>(domainObject);
+	public static <T> SingleItemModelBuilder<EntityModel<T>> entity(T domainObject) {
+		return new SingleItemModelBuilder<>(new EntityModel<>(domainObject));
 	}
 
-	public static <T extends RepresentationModel<T>> SingleItemModelBuilder<T> subResource(T model) {
+	public static <T extends RepresentationModel<T>> SingleItemModelBuilder<T> model(T model) {
 		return new SingleItemModelBuilder<>(model);
 	}
 
-	public static <T extends RepresentationModel<T>> EmbeddedModelBuilder<T> subResource(LinkRelation relation, T model) {
+	public static <T extends RepresentationModel<T>> EmbeddedModelBuilder<T> subModel(LinkRelation relation, T model) {
 		return new EmbeddedModelBuilder<>(relation, model);
-	}
-
-	public static class EntityModelBuilder<T> {
-
-		private EntityModel<T> entityModel;
-
-		public EntityModelBuilder(T domainObject) {
-			this.entityModel = new EntityModel<>(domainObject);
-		}
-
-		public ModelBuilder2.EntityModelBuilder<T> link(Link link) {
-
-			entityModel.add(link);
-			return this;
-		}
-
-		public EntityModel<T> build() {
-			return entityModel;
-		}
 	}
 
 	public static class EmbeddedModelBuilder<T extends RepresentationModel<T>> {
@@ -70,15 +49,20 @@ public class ModelBuilder2 {
 		private final Map<LinkRelation, List<T>> entityModels;
 		private final List<Link> links;
 
-		public EmbeddedModelBuilder(LinkRelation relation, T model) {
+		public EmbeddedModelBuilder() {
 
 			this.wrappers = new EmbeddedWrappers(false);
 			this.entityModels = new LinkedHashMap<>();
 			this.links = new ArrayList<>();
-			subResource(relation, model);
 		}
 
-		public EmbeddedModelBuilder<T> subResource(LinkRelation relation, T model) {
+		public EmbeddedModelBuilder(LinkRelation relation, T model) {
+
+			this();
+			subModel(relation, model);
+		}
+
+		public EmbeddedModelBuilder<T> subModel(LinkRelation relation, T model) {
 
 			this.entityModels.putIfAbsent(relation, new ArrayList<>());
 			this.entityModels.get(relation).add(model);
@@ -106,11 +90,11 @@ public class ModelBuilder2 {
 
 		private T singleItemModel;
 
-		public SingleItemModelBuilder(T singleItemModel) {
+		SingleItemModelBuilder(T singleItemModel) {
 			this.singleItemModel = singleItemModel;
 		}
 
-		public MultipleItemModelBuilder<T> subResource(T itemModel) {
+		public MultipleItemModelBuilder<T> model(T itemModel) {
 			return new MultipleItemModelBuilder<>(Arrays.asList(this.singleItemModel, itemModel), Collections.emptyList());
 		}
 
@@ -130,13 +114,13 @@ public class ModelBuilder2 {
 		private final List<T> models;
 		private final List<Link> links;
 
-		public MultipleItemModelBuilder(List<T> models, List<Link> links) {
+		MultipleItemModelBuilder(List<T> models, List<Link> links) {
 
 			this.models = new ArrayList<>(models);
 			this.links = new ArrayList<>(links);
 		}
 
-		public MultipleItemModelBuilder<T> subResource(T model) {
+		public MultipleItemModelBuilder<T> model(T model) {
 
 			this.models.add(model);
 			return this;

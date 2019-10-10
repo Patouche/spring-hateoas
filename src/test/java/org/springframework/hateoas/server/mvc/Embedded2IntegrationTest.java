@@ -87,7 +87,7 @@ public class Embedded2IntegrationTest {
 	}
 
 	@Test
-	public void singleItemUsingModelBuilder() throws Exception {
+	public void singleItem() throws Exception {
 
 		String results = this.mockMvc.perform(get("/other-author").accept(HAL_JSON)) //
 				.andExpect(header().string(HttpHeaders.CONTENT_TYPE, HAL_JSON_VALUE)) //
@@ -95,7 +95,7 @@ public class Embedded2IntegrationTest {
 				.getResponse() //
 				.getContentAsString();
 
-		assertThat(results).isEqualTo(read(new ClassPathResource("hal-embedded-single-item.json", getClass())));
+		assertThat(results).isEqualTo(read(new ClassPathResource("hal-single-item.json", getClass())));
 	}
 
 	@Test
@@ -121,7 +121,7 @@ public class Embedded2IntegrationTest {
 		RepresentationModel<?> singleItem() {
 
 			return ModelBuilder2 //
-					.subResource(new Author("Alan Watts", "January 6, 1915", "November 16, 1973")) //
+					.entity(new Author("Alan Watts", "January 6, 1915", "November 16, 1973")) //
 					.link(new Link("/people/alan-watts")) //
 					.build();
 		}
@@ -130,21 +130,21 @@ public class Embedded2IntegrationTest {
 		RepresentationModel<?> collection() {
 
 			return ModelBuilder2 //
-					.subResource( //
+					.model( //
 							ModelBuilder2 //
-									.resource(new Author("Greg L. Turnquist", null, null)) //
+									.entity(new Author("Greg L. Turnquist", null, null)) //
 									.link(linkTo(methodOn(EmbeddedController.class).authorDetails(1)).withSelfRel()) //
 									.link(linkTo(methodOn(EmbeddedController.class).collection()).withRel("authors")) //
 									.build())
-					.subResource( //
+					.model( //
 							ModelBuilder2 //
-									.resource(new Author("Craig Walls", null, null)) //
+									.entity(new Author("Craig Walls", null, null)) //
 									.link(linkTo(methodOn(EmbeddedController.class).authorDetails(2)).withSelfRel()) //
 									.link(linkTo(methodOn(EmbeddedController.class).collection()).withRel("authors")) //
 									.build())
-					.subResource( //
+					.model( //
 							ModelBuilder2 //
-									.resource(new Author("Oliver Drotbhom", null, null)) //
+									.entity(new Author("Oliver Drotbhom", null, null)) //
 									.link(linkTo(methodOn(EmbeddedController.class).authorDetails(2)).withSelfRel()) //
 									.link(linkTo(methodOn(EmbeddedController.class).collection()).withRel("authors")) //
 									.build())
@@ -156,12 +156,12 @@ public class Embedded2IntegrationTest {
 		RepresentationModel<?> authorDetails(@PathVariable int id) {
 
 			return ModelBuilder2 //
-					.subResource(LinkRelation.of("author"), ModelBuilder2 //
-							.resource(new Author("Alan Watts", "January 6, 1915", "November 16, 1973")) //
+					.subModel(LinkRelation.of("author"), ModelBuilder2 //
+							.entity(new Author("Alan Watts", "January 6, 1915", "November 16, 1973")) //
 							.link(new Link("/people/alan-watts")) //
 							.build())
-					.subResource(LinkRelation.of("illustrator"), ModelBuilder2 //
-							.resource(new Author("John Smith", null, null)) //
+					.subModel(LinkRelation.of("illustrator"), ModelBuilder2 //
+							.entity(new Author("John Smith", null, null)) //
 							.link(new Link("/people/john-smith")) //
 							.build())
 					.link(new Link("/books/the-way-of-zen")) //
@@ -173,7 +173,7 @@ public class Embedded2IntegrationTest {
 
 	@Value
 	@AllArgsConstructor
-	static class Author extends RepresentationModel<Author> {
+	static class Author {
 
 		private String name;
 

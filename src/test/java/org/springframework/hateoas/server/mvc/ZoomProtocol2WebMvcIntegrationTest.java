@@ -27,8 +27,10 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
 
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,7 +43,7 @@ import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.LinkRelation;
 import org.springframework.hateoas.MediaTypes;
-import org.springframework.hateoas.ModelBuilder;
+import org.springframework.hateoas.ModelBuilder2;
 import org.springframework.hateoas.RepresentationModel;
 import org.springframework.hateoas.config.EnableHypermediaSupport;
 import org.springframework.hateoas.config.EnableHypermediaSupport.HypermediaType;
@@ -67,7 +69,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 @ExtendWith(SpringExtension.class)
 @WebAppConfiguration
 @ContextConfiguration
-public class ZoomProtocolWebMvcIntegrationTest {
+public class ZoomProtocol2WebMvcIntegrationTest {
 
 	@Autowired WebApplicationContext context;
 
@@ -113,30 +115,30 @@ public class ZoomProtocolWebMvcIntegrationTest {
 		@GetMapping("/products")
 		public RepresentationModel<?> all() {
 
-			ModelBuilder.EmbeddedModelBuilder builder = ModelBuilder //
-					.embed() //
-					.rootLink(linkTo(methodOn(ProductController.class).all()).withSelfRel());
-
-			PRODUCTS.keySet().stream() //
+			List<EntityModel<Product>> products = PRODUCTS.keySet().stream() //
 					.map(id -> new EntityModel<>(PRODUCTS.get(id), new Link("http://localhost/products/{id}").expand(id))) //
-					.forEach(productEntityModel -> {
+					.collect(Collectors.toList());
 
-						if (productEntityModel.getContent().isFavorite()) {
+			ModelBuilder2.EmbeddedModelBuilder<EntityModel<Product>> builder = new ModelBuilder2.EmbeddedModelBuilder<>();
+			builder.link(linkTo(methodOn(ProductController.class).all()).withSelfRel());
 
-							builder //
-									.embed(favoriteProducts) //
-									.entityModel(productEntityModel) //
-									.rootLink(productEntityModel.getRequiredLink(SELF).withRel(favoriteProducts));
-						}
+			for (EntityModel<Product> productEntityModel : products) {
 
-						if (productEntityModel.getContent().isPurchased()) {
+				if (productEntityModel.getContent().isFavorite()) {
 
-							builder //
-									.embed(purchasedProducts) //
-									.entityModel(productEntityModel) //
-									.rootLink(productEntityModel.getRequiredLink(SELF).withRel(purchasedProducts));
-						}
-					});
+					builder //
+							.subModel(favoriteProducts, productEntityModel) //
+							.link(productEntityModel.getRequiredLink(SELF).withRel(favoriteProducts));
+				}
+
+				if (productEntityModel.getContent().isPurchased()) {
+
+					builder //
+							.subModel(purchasedProducts, productEntityModel) //
+							.link(productEntityModel.getRequiredLink(SELF).withRel(purchasedProducts));
+				}
+
+			}
 
 			return builder.build();
 		}
@@ -145,7 +147,7 @@ public class ZoomProtocolWebMvcIntegrationTest {
 	@Data
 	@AllArgsConstructor
 	static class Product {
-		
+
 		private String someProductProperty;
 		@Getter(onMethod = @__({ @JsonIgnore })) private boolean favorite = false;
 		@Getter(onMethod = @__({ @JsonIgnore })) private boolean purchased = false;
