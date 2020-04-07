@@ -16,9 +16,9 @@
 package org.springframework.hateoas.server.mvc;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.*;
+import static org.springframework.hateoas.MappingTestUtils.*;
 import static org.springframework.hateoas.MediaTypes.*;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
-import static org.springframework.hateoas.support.MappingUtils.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.*;
@@ -33,7 +33,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.LinkRelation;
 import org.springframework.hateoas.ModelBuilder2;
@@ -68,13 +67,17 @@ public class Embedded2IntegrationTest {
 
 	private @Autowired WebApplicationContext context;
 	private MockMvc mockMvc;
+	private ContextualMapper contextualMapper;
 
 	@BeforeEach
 	public void setUp() {
+
 		this.mockMvc = webAppContextSetup(this.context).build();
+		this.contextualMapper = createMapper(getClass());
+
 	}
 
-	@Test
+	@Test // #864
 	public void embeddedSpecUsingAPIs() throws Exception {
 
 		String results = this.mockMvc.perform(get("/author/1").accept(HAL_JSON)) //
@@ -83,10 +86,10 @@ public class Embedded2IntegrationTest {
 				.getResponse() //
 				.getContentAsString();
 
-		assertThat(results).isEqualTo(read(new ClassPathResource("hal-embedded-author-illustrator.json", getClass())));
+		assertThat(results).isEqualTo(contextualMapper.readFile("hal-embedded-author-illustrator.json"));
 	}
 
-	@Test
+	@Test // #864
 	public void singleItem() throws Exception {
 
 		String results = this.mockMvc.perform(get("/other-author").accept(HAL_JSON)) //
@@ -95,10 +98,10 @@ public class Embedded2IntegrationTest {
 				.getResponse() //
 				.getContentAsString();
 
-		assertThat(results).isEqualTo(read(new ClassPathResource("hal-single-item.json", getClass())));
+		assertThat(results).isEqualTo(contextualMapper.readFile("hal-single-item.json"));
 	}
 
-	@Test
+	@Test // #864
 	public void collection() throws Exception {
 
 		String results = this.mockMvc.perform(get("/authors").accept(HAL_JSON)) //
@@ -107,9 +110,7 @@ public class Embedded2IntegrationTest {
 				.getResponse() //
 				.getContentAsString();
 
-		System.out.println(results);
-
-		assertThat(results).isEqualTo(read(new ClassPathResource("hal-embedded-collection.json", getClass())));
+		assertThat(results).isEqualTo(contextualMapper.readFile("hal-embedded-collection.json"));
 	}
 
 	@RestController
@@ -122,7 +123,7 @@ public class Embedded2IntegrationTest {
 
 			return ModelBuilder2 //
 					.entity(new Author("Alan Watts", "January 6, 1915", "November 16, 1973")) //
-					.link(new Link("/people/alan-watts")) //
+					.link(Link.of("/people/alan-watts")) //
 					.build();
 		}
 
@@ -158,15 +159,15 @@ public class Embedded2IntegrationTest {
 			return ModelBuilder2 //
 					.subModel(LinkRelation.of("author"), ModelBuilder2 //
 							.entity(new Author("Alan Watts", "January 6, 1915", "November 16, 1973")) //
-							.link(new Link("/people/alan-watts")) //
+							.link(Link.of("/people/alan-watts")) //
 							.build())
 					.subModel(LinkRelation.of("illustrator"), ModelBuilder2 //
 							.entity(new Author("John Smith", null, null)) //
-							.link(new Link("/people/john-smith")) //
+							.link(Link.of("/people/john-smith")) //
 							.build())
-					.link(new Link("/books/the-way-of-zen")) //
-					.link(new Link("/people/alan-watts", LinkRelation.of("author"))) //
-					.link(new Link("/people/john-smith", LinkRelation.of("illustrator"))) //
+					.link(Link.of("/books/the-way-of-zen")) //
+					.link(Link.of("/people/alan-watts", LinkRelation.of("author"))) //
+					.link(Link.of("/people/john-smith", LinkRelation.of("illustrator"))) //
 					.build();
 		}
 	}

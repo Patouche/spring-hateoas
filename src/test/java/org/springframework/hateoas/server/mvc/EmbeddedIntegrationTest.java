@@ -122,7 +122,7 @@ public class EmbeddedIntegrationTest {
 
 			return ModelBuilder //
 					.entity(new Author("Alan Watts", "January 6, 1915", "November 16, 1973")) //
-					.link(new Link("/people/alan-watts")) //
+					.link(Link.of("/people/alan-watts")) //
 					.build();
 		}
 
@@ -156,15 +156,15 @@ public class EmbeddedIntegrationTest {
 					.embed(LinkRelation.of("author")) //
 
 					.entity(new Author("Alan Watts", "January 6, 1915", "November 16, 1973")) //
-					.link(new Link("/people/alan-watts")) //
+					.link(Link.of("/people/alan-watts")) //
 
 					.embed(LinkRelation.of("illustrator")) //
 					.entity(new Author("John Smith", null, null)) //
-					.link(new Link("/people/john-smith")) //
+					.link(Link.of("/people/john-smith")) //
 
-					.rootLink(new Link("/books/the-way-of-zen")) //
-					.rootLink(new Link("/people/alan-watts", LinkRelation.of("author"))) //
-					.rootLink(new Link("/people/john-smith", LinkRelation.of("illustrator"))) //
+					.rootLink(Link.of("/books/the-way-of-zen")) //
+					.rootLink(Link.of("/people/alan-watts", LinkRelation.of("author"))) //
+					.rootLink(Link.of("/people/john-smith", LinkRelation.of("illustrator"))) //
 
 					.build();
 		}

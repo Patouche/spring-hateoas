@@ -17,6 +17,7 @@ package org.springframework.hateoas.server.mvc;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.*;
 import static org.springframework.hateoas.IanaLinkRelations.*;
+import static org.springframework.hateoas.MappingTestUtils.*;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 import static org.springframework.hateoas.support.MappingUtils.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -42,6 +43,8 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.LinkRelation;
+import org.springframework.hateoas.MappingTestUtils;
+import org.springframework.hateoas.MappingTestUtils.ContextualMapper;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.ModelBuilder2;
 import org.springframework.hateoas.RepresentationModel;
@@ -75,14 +78,19 @@ public class ZoomProtocol2WebMvcIntegrationTest {
 
 	MockMvc mockMvc;
 
-	private static Map<Integer, Product> PRODUCTS;
+    private ContextualMapper contextualMapper;
 
-	@BeforeEach
+    private static Map<Integer, Product> PRODUCTS;
+
+
+    @BeforeEach
 	public void setUp() {
 
 		this.mockMvc = webAppContextSetup(this.context).build();
 
-		PRODUCTS = new TreeMap<>();
+        this.contextualMapper = createMapper(getClass());
+
+        PRODUCTS = new TreeMap<>();
 
 		PRODUCTS.put(998, new Product("someValue", true, true));
 		PRODUCTS.put(777, new Product("someValue", true, false));
@@ -94,7 +102,7 @@ public class ZoomProtocol2WebMvcIntegrationTest {
 		PRODUCTS.put(666, new Product("someValue", false, true));
 	}
 
-	@Test // #175
+	@Test // #175 #864
 	public void modelBuilderCanAssembleZoomProtocol() throws Exception {
 
 		String results = this.mockMvc.perform(get("/products").accept(MediaTypes.HAL_JSON)) //
@@ -103,7 +111,7 @@ public class ZoomProtocol2WebMvcIntegrationTest {
 				.getResponse() //
 				.getContentAsString();
 
-		assertThat(results).isEqualTo(read(new ClassPathResource("zoom-hypermedia.json", getClass())));
+		assertThat(results).isEqualTo(contextualMapper.readFile("zoom-hypermedia.json"));
 	}
 
 	@RestController
@@ -116,7 +124,7 @@ public class ZoomProtocol2WebMvcIntegrationTest {
 		public RepresentationModel<?> all() {
 
 			List<EntityModel<Product>> products = PRODUCTS.keySet().stream() //
-					.map(id -> new EntityModel<>(PRODUCTS.get(id), new Link("http://localhost/products/{id}").expand(id))) //
+					.map(id -> EntityModel.of(PRODUCTS.get(id), new Link("http://localhost/products/{id}").expand(id))) //
 					.collect(Collectors.toList());
 
 			ModelBuilder2.EmbeddedModelBuilder<EntityModel<Product>> builder = new ModelBuilder2.EmbeddedModelBuilder<>();
